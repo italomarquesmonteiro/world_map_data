@@ -1,0 +1,121 @@
+---
+title: "Dados espaciais do mundo, Brasil, Rio Grande do Sul"
+description: ""
+author script: 
+  - name: "Ítalo Marques-Monteiro"
+    github: https://github.com/italomarquesmonteiro
+    kaggle: https://www.kaggle.com/talomarquesmonteiro
+    linkedin: linkedin.com/in/ítalo-monteiro-0b2516144
+    lattes: http://lattes.cnpq.br/7174985368517137
+    orcid_id: https://orcid.org/0000-0003-4367-1034
+    affiliation: Smart Data
+        
+date: "2023-11-27"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+world <- rnaturalearth::ne_countries(
+    scale = 110, type = "countries", returnclass = "sf")
+
+state <- geobr::read_state(code_state = "all", year = 2020) 
+muni <- geobr::read_municipality(code_muni = "all", year = 2020)
+
+rs <- state |>
+    dplyr::filter(abbrev_state == "RS")
+rs_munis <- muni |>
+    dplyr::filter(abbrev_state == "RS")
+eldorado_rs <- muni |>
+    dplyr::filter(name_muni == "Eldorado Do Sul")
+```
+
+
+```{r}
+ggplot(data = world, mapping = aes(geometry = geometry),
+        fill = "grey90", color = "grey90") +
+    geom_sf() +
+    geom_sf(data = rs, mapping = aes(geometry = geom),
+        fill = "#d2a932", color = "black")
+```
+
+
+```{r}
+p1 <- ggplot(data = world, mapping = aes(geometry = geometry),
+        fill = "grey90", color = "grey90") +
+    geom_sf() +
+    #labs(title = "World map") #+
+   # geom_sf(data = rs, mapping = aes(geometry = geom),
+        #fill = "#d2a932", color = "black")
+col_back <- "#1D201F"
+theme_map <- theme_void() +
+    theme(
+        plot.title = ggtext::element_markdown(face = "bold", family = "Source Sans Pro", size = 24, hjust = 0.5, color = "grey70",),  #nolint
+        plot.caption = ggtext::element_markdown(face = "italic", family = "Fira Sans Pro", size = 12, color = "grey70"), # nolint
+        legend.position = "bottom",
+        legend.text = element_text(color = "grey70"),
+        plot.margin = margin(-6, -1, -6, -1, "cm"),
+        plot.background = element_rect(fill = col_back, color = NA),
+        legend.title = element_text(
+            face = "bold",
+            color = "grey70",
+            margin = margin(0, 0, 0.25, 0, "cm")
+        )
+    )
+p2 <- p1 + theme_map
+sf::st_crs(world)
+p3 <- p2 +
+    coord_sf(crs = "+proj=robin")
+grat <- sf::st_graticule(lat = c(-89.9, seq(-80, 80, 20), 89.9))
+
+p3b  <- p2 +
+    geom_sf(
+        grat, mapping = aes(
+            geometry = geometry),
+            color = "gray10",
+        alpha = 0.5
+  ) +
+  coord_sf(crs = "+proj=robin")
+p3b
+```
+
+
+```{r}
+ggsave(
+    "world_map_data/word_image.png",
+        plot = p3b,
+            dpi = 300,
+            #width = 7,
+                #height = 3
+                )
+```
+
+
+```{r}
+pp <- ggplot() +
+    geom_sf(
+        data = world, mapping = aes(geometry = geometry),
+        fill = "grey90", color = "white") +
+    geom_sf(data = rs, mapping = aes(geometry = geom),
+        fill = "#d2a932", color = "black") +
+    geom_sf(data = eldorado_rs, mapping = aes(geometry = geom),
+        fill = "#0072B2", color = "white") +
+    xlim(-59, -48) +
+    ylim(35, 26) +
+    theme(
+        panel.background = element_blank(),
+        panel.grid = element_blank(),
+  line = element_blank(),
+  rect = element_blank()
+  )
+```
+
+```{r}
+ggsave(
+    "world_map_data/rs_image.png",
+        plot = pp,
+            dpi = 300)
+```
